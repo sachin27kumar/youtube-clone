@@ -1,11 +1,23 @@
 import React from "react";
-import { videoData } from "./Utiles/videoData";
 import { Link } from "react-router-dom";
+import { useFetchVideos } from "./Hooks/useFetchVideos";
 
 export default function VideoCardList({ categoryName, searchTerm }) {
-  // Filter products based on the selected category
-  const filteredData = Array.isArray(videoData)
-    ? videoData
+  const { data, loading, error } = useFetchVideos(
+    "http://localhost:5300/api/videos"
+  );
+
+  // Handle loading and error states
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  // Filter data based on category and searchTerm
+  const filteredData = Array.isArray(data)
+    ? data
         .filter(
           (item) =>
             categoryName === "All" ||
@@ -19,7 +31,7 @@ export default function VideoCardList({ categoryName, searchTerm }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {filteredData.map((video) => (
-        <Link to={`/video/${video.videoId}`} key={video.videoId}>
+        <Link to={`/video/${video._id}`} key={video._id}>
           <div className="bg-white rounded-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
             {/* Thumbnail */}
             <img

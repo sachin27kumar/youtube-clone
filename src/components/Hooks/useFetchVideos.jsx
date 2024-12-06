@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-export const useFetchProducts = (url) => {
+export const useFetchVideos = (url) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ export const useFetchProducts = (url) => {
           throw new Error(`Error: ${response.status}`);
         }
         const result = await response.json();
-        console.log(result)
+        console.log(result);
         setData(result);
       } catch (error) {
         setError(error.message);

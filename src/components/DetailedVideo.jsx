@@ -1,22 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import TopHeader from "./TopHeader";
 import Sidebar from "./Sidebar";
-import { videoData } from "./Utiles/videoData";
+import { useFetchVideos } from "./Hooks/useFetchVideos";
 
 export default function DetailedVideo() {
   const { videoId } = useParams();
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
-
-  const videoDetails = videoData.find((video) => video.videoId === videoId);
-  const [comments, setComments] = useState(videoDetails?.comments || []);
   const [newComment, setNewComment] = useState("");
-  const [likes, setLikes] = useState(videoDetails?.likes || 0);
-  const [dislikes, setDislikes] = useState(videoDetails?.dislikes || 0);
+  const [comments, setComments] = useState([]);
 
-  if (!videoDetails) {
+  // Fetch video data using the custom hook
+  const { data, loading, error } = useFetchVideos(
+    "http://localhost:5300/api/videos"
+  );
+
+  const video = data.find((item) => String(item._id) === String(videoId));
+
+  // Handle loading or error states
+  if (loading) {
     return (
-      <div className="h-screen mb-2 flex items-center justify-center text-lg font-bold">
+      <div className="h-screen flex items-center justify-center text-lg font-bold">
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center text-lg font-bold text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
+
+  if (!video) {
+    return (
+      <div className="h-screen flex items-center justify-center text-lg font-bold">
         Video not found.
       </div>
     );
@@ -41,8 +61,13 @@ export default function DetailedVideo() {
     );
   };
 
-  const handleLike = () => setLikes((prev) => prev + 1);
-  const handleDislike = () => setDislikes((prev) => prev + 1);
+  const handleLike = () => {
+    video.likes += 1; // Directly increment likes
+  };
+
+  const handleDislike = () => {
+    video.dislikes += 1; // Directly increment dislikes
+  };
 
   return (
     <div className="mb-4 flex flex-col">
@@ -59,8 +84,8 @@ export default function DetailedVideo() {
           {/* Video Player */}
           <div className="mb-4 md:mb-6">
             <iframe
-              src={videoDetails.videoUrl}
-              title={videoDetails.title}
+              src={video.videoUrl}
+              title={video.title}
               className="w-full h-56 sm:h-64 md:h-80 lg:h-[24rem] rounded-lg shadow-md"
               allowFullScreen
             ></iframe>
@@ -68,32 +93,33 @@ export default function DetailedVideo() {
 
           {/* Video Details */}
           <h1 className="text-lg md:text-xl font-bold mb-2 truncate">
-            {videoDetails.title}
+            {video.title}
           </h1>
           <p className="text-gray-600 text-xs md:text-sm mb-4">
-            {videoDetails.views} views • {videoDetails.uploadDate}
+            {video.views} views •{" "}
+            {new Date(video.uploadDate).toLocaleDateString()}
           </p>
           <p className="text-gray-800 text-sm md:text-base mb-6">
-            {videoDetails.description}
+            {video.description}
           </p>
 
           {/* Channel Info and Actions */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             <span className="font-bold text-sm md:text-lg">
-              {videoDetails.channelName}
+              {video.channelName}
             </span>
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 className="px-3 py-1 sm:px-4 sm:py-2 bg-blue-500 text-white rounded-md text-xs sm:text-sm"
                 onClick={handleLike}
               >
-                👍 Like {likes}
+                👍 Like {video.likes}
               </button>
               <button
                 className="px-3 py-1 sm:px-4 sm:py-2 bg-red-500 text-white rounded-md text-xs sm:text-sm"
                 onClick={handleDislike}
               >
-                👎 Dislike {dislikes}
+                👎 Dislike {video.dislikes}
               </button>
             </div>
           </div>
@@ -121,7 +147,7 @@ export default function DetailedVideo() {
 
             {/* Comments List */}
             <ul className="space-y-2">
-              {comments.map((comment) => (
+              {video.comments.map((comment) => (
                 <li
                   key={comment.commentId}
                   className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border rounded-md bg-gray-50"
